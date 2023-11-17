@@ -14,7 +14,10 @@
 
 import streamlit as st
 from streamlit.logger import get_logger
-
+import os
+from PIL import Image
+import numpy as np
+ 
 LOGGER = get_logger(__name__)
 
 
@@ -24,10 +27,16 @@ def run():
         page_icon="👋",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
-
+    st.write("# Welcome to Manututu! 👋")
+    st.write(f"currdir {os.path.abspath(os.curdir)}")
     st.sidebar.success("Select a demo above.")
-
+    files = st.file_uploader(label='coucou',accept_multiple_files=True,
+                     on_change=None)
+    
+    image = Image.open(files[0])
+    img_array = np.array(image)
+    st.write(files)
+    st.image(image=img_array)
     st.markdown(
         """
         Streamlit is an open-source app framework built specifically for
