@@ -19,32 +19,51 @@ from PIL import Image
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-
-
+import onnxruntime as ort
+from skimage.transform import resize
 # https://docs.streamlit.io/library/api-reference/widgets/st.download_button
 #scroll for image download
 
-
+# Terminal: streamlit run /workspaces/dentalsegmentator/Hello.py
 LOGGER = get_logger(__name__)
 
+def sigmoid(x):
+   return 1/(1+np.exp(-x))
+
+
+@st.cache
+def GetOrtSession():
+   ort_sess = ort.InferenceSession('./onnx/model.onnx',providers = ['CPUExecutionProvider'])
+   return ort_sess
+
+
+def Predict(img,ort_sess):
+   init_shape = img.shape
+   dummy_input = resize(img,(512,512),anti_aliasing=True,preserve_range=True)
+   outputs = ort_sess.run(None, {'input': dummy_input})[0].squeeze() #ort_sess.get_inputs()[0]
+   outputs = 255*(sigmoid(outputs)>.5)
+   return outputs.astype(np.int16)
 
 def run():
     st.set_page_config(
         page_title="Hello",
         page_icon="👋",
     )
-
+    #ort_sess = GetOrtSession()
     st.write("# Welcome to Manututu! 👋")
     st.write(f"currdir {os.path.abspath(os.curdir)}")
     st.sidebar.success("Select a demo above.")
-    files = st.file_uploader(label='coucou',accept_multiple_files=True,
+    files = st.file_uploader(label='coucou',accept_multiple_files=False,
                      on_change=None)
     
-    image = Image.open(files[0])
+    image = Image.open(files)
     img_array = np.array(image)
+
+    st.write(f'Input image shape: {img_array.shape}')
     plt.imsave('blob.png',img_array)
-    st.write(files)
     st.image(image=img_array)
+
+
     with open("blob.png", "rb") as file:
       btn = st.download_button(
               label="Download image",
