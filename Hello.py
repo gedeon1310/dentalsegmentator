@@ -17,7 +17,14 @@ from streamlit.logger import get_logger
 import os
 from PIL import Image
 import numpy as np
- 
+import torch
+import matplotlib.pyplot as plt
+
+
+# https://docs.streamlit.io/library/api-reference/widgets/st.download_button
+#scroll for image download
+
+
 LOGGER = get_logger(__name__)
 
 
@@ -35,8 +42,16 @@ def run():
     
     image = Image.open(files[0])
     img_array = np.array(image)
+    plt.imsave('blob.png',img_array)
     st.write(files)
     st.image(image=img_array)
+    with open("blob.png", "rb") as file:
+      btn = st.download_button(
+              label="Download image",
+              data=file,
+              file_name="blob.png",
+              mime="image/png"
+            )
     st.markdown(
         """
         Streamlit is an open-source app framework built specifically for
